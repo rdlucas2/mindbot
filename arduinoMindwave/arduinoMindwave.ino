@@ -24,6 +24,7 @@ int tempDelta = 0;
 
 //ultrasonic sensor
 int distanceTimer = 0;
+
 int lastDistanceTimer = 0;
 int distanceDelta = 0;
 
@@ -38,6 +39,8 @@ void loop()
   checkTemp(10000);
   checkDistance(1000);
   
+  
+  
   if(Serial.available() > 0)
   {
       input = Serial.readStringUntil('\n');
@@ -48,8 +51,8 @@ void loop()
   if(input == "red") 
   {
     setAllLights(20, 0, 0);
-    Motor1.run(200);
-    Motor2.run(200);
+    Motor1.run(50);
+    Motor2.run(50);
     return;
   }
   
@@ -63,7 +66,7 @@ void loop()
   if(input == "blue")
   {
     setAllLights(0, 0, 20);
-    Motor1.run(200);
+    Motor1.run(50);
     Motor2.run(0);
     return;
   }
@@ -71,8 +74,8 @@ void loop()
   if(input == "purple")
   {
     setAllLights(20, 20, 20);
-    Motor1.run(155);
-    Motor2.run(80);
+    Motor1.run(50);
+    Motor2.run(20);
     return;
   }
   
@@ -84,7 +87,7 @@ void loop()
     return;
   }
   
-  if(input == "teal")
+  if(input == "yellow")
   {
     setAllLights(20, 20, 0);
     return;
@@ -98,6 +101,8 @@ void loop()
     return;
   } else {
     setAllLights(0, 0, 0);
+    Motor1.stop();
+    Motor2.stop();
   }
 }
 
