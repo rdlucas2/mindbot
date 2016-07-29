@@ -5,6 +5,7 @@ var signalrServerUrl = config.signalrServerUrl;
 
 var client = null;
 var port = null;
+var connected = false;
 
 var Wireless = require('wireless');
 var wireless = new Wireless({
@@ -37,6 +38,7 @@ wireless.on('former', function(address) {
 });
 
 function onceConnectedToWifi() {
+	if(connected) { return; }
 
 	var SerialPort = require('serialport');
 	
@@ -68,7 +70,7 @@ function onceConnectedToWifi() {
 			}
 		}
 	});
-	
+
 	var signalR = require('signalr-client');
 	
 	console.log("Connecting to SignalR Server...");
@@ -79,6 +81,7 @@ function onceConnectedToWifi() {
 		//, false //doNotStart default is false - if true, must call client.start().
 	);
 
+	connected = true;
 }
 
 //events
@@ -111,11 +114,23 @@ function registerHubEvents() {
 					}
 				}
 				break;
+			case 'StopRobot':
+				writeMessage('stop');
+				client.handlers.datahub = {
+					updatedata: function(data) {
+						console.log(data);
+						console.log('**********INSIDE STOPROBOT**********');
+						writeMessage('stop');
+					}
+				}
+				break;
 			default:
 				console.log('No mode selected!');
 		}
 	});
 
+	setInterval(function() { client.invoke('ModeHub', 'PiConnected'); }, 5000);
+	
 	client.invoke('ModeHub', 'GetMode');
 }
 
