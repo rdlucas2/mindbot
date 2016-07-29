@@ -33,7 +33,7 @@ wireless.on('join', function(network) {
 
 wireless.on('former', function(address) {
 	console.log("[OLD JOIN] " + address);
-	setTimeout(onceConnectedToWifi, 5000); //20000); //use 5000 for local dev, use 20000 when starting from boot - needs some extra time for HTTP to work properly?
+	setTimeout(onceConnectedToWifi, 10000); //20000); //use 10000 for local dev, use 20000 when starting from boot - needs some extra time for HTTP to work properly?
 });
 
 function onceConnectedToWifi() {
