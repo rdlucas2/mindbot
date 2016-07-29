@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 //signalR server URL
 var config = require('./config');
 
@@ -159,4 +157,3 @@ function writePortMessage(message) {
 		console.log('message written');
 	});	
 }
->>>>>>> parent of 6156b6a... needed a bit more time for wifi to connect properly
