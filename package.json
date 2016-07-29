@@ -1,0 +1,16 @@
+{
+  "name": "mindbot_signalr_client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "serialport": "^4.0.1",
+    "signalr-client": "^0.0.16"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ryan Lucas",
+  "license": "ISC"
+}
