@@ -4,7 +4,7 @@ The arduinoMindwave code should be uploaded to the makeblock orion arduino board
 
 The node app communicates between the signalr server and the robot - allowing the headset to controle the robot!
 
-TODO: Add link to c# wpf application which contains the signalr server and reads the data from the bluetooth mindwave mobile headset.
+Connect the [mindbotServer](https://github.com/rdlucas2/mindbotServer) and reads the data from the bluetooth mindwave mobile headset.
 
 Setup the raspberry pi as normal (used raspbian). Install nodejs.
 
