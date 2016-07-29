@@ -1,11 +1,11 @@
 //signalR server URL
 var config = require('./config');
+var os = require('os');
 
 var signalrServerUrl = config.signalrServerUrl;
 
 var client = null;
 var port = null;
-var connected = false;
 
 var Wireless = require('wireless');
 var wireless = new Wireless({
@@ -38,8 +38,6 @@ wireless.on('former', function(address) {
 });
 
 function onceConnectedToWifi() {
-	if(connected) { return; }
-
 	var SerialPort = require('serialport');
 	
 	port = new SerialPort('/dev/ttyUSB0', {
@@ -63,12 +61,14 @@ function onceConnectedToWifi() {
 				writePortMessage('yellow');
 			}
 		}
+		/*
 		if(data.indexOf('distance=') > -1) {
 			var distance = parseInt(data.substring(9));
 			if(distance < 20) {
 				writePortMessage('teal');
 			}
 		}
+		*/
 	});
 
 	var signalR = require('signalr-client');
@@ -81,7 +81,6 @@ function onceConnectedToWifi() {
 		//, false //doNotStart default is false - if true, must call client.start().
 	);
 
-	connected = true;
 }
 
 //events
@@ -120,7 +119,6 @@ function registerHubEvents() {
 					updatedata: function(data) {
 						console.log(data);
 						console.log('**********INSIDE STOPROBOT**********');
-						writeMessage('stop');
 					}
 				}
 				break;
@@ -129,7 +127,30 @@ function registerHubEvents() {
 		}
 	});
 
-	setInterval(function() { client.invoke('ModeHub', 'PiConnected'); }, 5000);
+	setInterval(function() {
+		var ifaces = os.networkInterfaces();
+		Object.keys(ifaces).forEach(function(ifname) {
+			var alias = 0;
+	
+			ifaces[ifname].forEach(function(iface) {
+				if ('IPv4' !== iface.family || iface.internal !== false) {
+					return; //skip over internal (localhost and non-ipv4 addresses)
+				}
+	
+				if (alias >= 1) {
+					//this single interface has multiple ipv4 addresses
+					console.log(ifname + ':' + alias, iface.address);
+					client.invoke('ModeHub', 'PiConnected', iface.address); 
+
+				} else {
+					//this interface has only one ipv4 address
+					console.log(ifname, iface.address);
+					client.invoke('ModeHub', 'PiConnected', iface.address); 
+				}
+				++alias;
+			});
+		});
+	}, 5000);
 	
 	client.invoke('ModeHub', 'GetMode');
 }
