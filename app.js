@@ -36,7 +36,7 @@ wireless.on('join', function(network) {
 
 wireless.on('former', function(address) {
 	console.log("[OLD JOIN] " + address);
-	setTimeout(onceConnectedToWifi, 20000); //20000); //use 5000 for local dev, use 20000 when starting from boot - needs some extra time for HTTP to work properly?
+	setTimeout(onceConnectedToWifi, 5000); //20000); //use 5000 for local dev, use 20000 when starting from boot - needs some extra time for HTTP to work properly?
 });
 
 function onceConnectedToWifi() {
@@ -88,13 +88,44 @@ function onceConnectedToWifi() {
 var mode = '';
 function registerModeHubEvents() {
 	client.on('ModeHub', 'setMode', function(modeName) {
-		console.log('********************' + modeName + '********************');
+		console.log('******************** MODE UPDATED: ' + modeName + '********************');
 		mode = modeName;
 
 		switch(mode) {
 			case 'Circle Game':
 				console.log('circle game mode set');
-				circleGameEvents();
+				client.handlers.datahub = {
+					updatedata: function(data) {
+						console.log('**********INSIDE CIRCLEGAME**********');
+						console.log(data);
+						var message = 'stop';
+
+						/* // if we send these commands this quickly, not everything gets processed
+						writePortMessage('attention=' + data.Attention);
+						writePortMessage('meditation=' + data.Meditation);
+						*/
+
+						if(data.Attention > 60) {
+							message = 'forward';
+						}
+				
+						if(data.Meditation > 60) {
+							message = 'turnLeft';
+						}
+						
+						if(data.Attention > 60 && data.Meditation > 60) {
+							message = 'circle';
+						}
+
+						writePortMessage(message);
+					},
+					getblink: function(blinkStrength) {
+						console.log('Blink Strength: ', blinkStrength);
+						if(blinkStrength > 60) {
+							writePortMessage('toggleHand');
+						}
+					}
+				}
 				break;
 			case 'Meditation':
 				console.log('meditation mode set');
@@ -163,6 +194,7 @@ function logConnectionToServer() {
 
 				} else {
 					//this interface has only one ipv4 address
+					console.log('device and ip address...');
 					console.log(ifname, iface.address);
 					client.invoke('ModeHub', 'PiConnected', iface.address); 
 				}
@@ -172,38 +204,10 @@ function logConnectionToServer() {
 	}, 5000);
 }
 
-function circleGameEvents() {
-	client.handlers.datahub = {
-		updatedata: function(data) {
-			console.log('**********INSIDE CIRCLEGAME**********');
-			console.log(data);
-			var message = 'white';
-			if(data.Attention > 60) {
-				message = 'red';
-			}
-	
-			if(data.Meditation > 60) {
-				message = 'blue';
-			}
-	
-			if(data.Attention > 60 && data.Meditation > 60) {
-				message = 'purple';
-			}
-			writePortMessage(message);
-		},
-		getblink: function(blinkStrength) {
-			console.log('Blink Strength: ', blinkStrength);
-			if(blinkStrength > 50) {
-				writePortMessage('green');
-			}
-		}
-	}
-}
-
 //helper functions
 
 function writePortMessage(message) {
-	console.log(message);
+	console.log('sending message:', message);
 	port.write(message, function(err) {
 		if(err) {
 			return console.log('Error on write: ', err.message);

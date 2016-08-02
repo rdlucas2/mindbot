@@ -5,7 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "serialport": "^4.0.1",
-    "signalr-client": "^0.0.16"
+    "signalr-client": "^0.0.16",
+    "wireless": "^0.3.2"
   },
   "devDependencies": {},
   "scripts": {
