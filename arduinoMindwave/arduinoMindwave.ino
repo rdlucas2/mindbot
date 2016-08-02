@@ -5,6 +5,7 @@ MeRGBLed led(PORT_3);
 MeDCMotor Motor1(M1);
 MeDCMotor Motor2(M2);
 MeDCMotor Hand(PORT_1);
+MeDCMotor HandAngle(PORT_2);
 MeTemperature myTemp(PORT_8, SLOT2);
 MeUltrasonicSensor ultraSensor(PORT_7); /* Ultrasonic module can ONLY be connected to port 3, 4, 6, 7, 8 of base shield. */
 
@@ -36,10 +37,8 @@ Serial.setTimeout(10);
 
 void loop() 
 {
-  checkTemp(10000);
+  //checkTemp(10000);
   checkDistance(1000);
-  
-  
   
   if(Serial.available() > 0)
   {
@@ -59,7 +58,10 @@ void loop()
   if(input == "green")
   {
     setAllLights(0, 20, 0);
-    toggleHand();  
+    HandAngle.run(100);
+    delay(1000);
+    HandAngle.stop();
+    //toggleHand();
     return;
   }
   
@@ -144,14 +146,18 @@ void toggleHand()
 {
   if(handPosition) 
   {
-    Hand.run(handSpeed);
+    Hand.run(-handSpeed);
+    HandAngle.run(handSpeed);
     delay(2000);
     Hand.stop();
+    HandAngle.stop();
     handPosition = !handPosition;
   } else {
-    Hand.run(-handSpeed);
+    Hand.run(handSpeed);
+    HandAngle.run(-handSpeed);
     delay(2000);
     Hand.stop();
+    HandAngle.stop();
     handPosition = !handPosition;
   }
 }

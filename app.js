@@ -27,10 +27,12 @@ wireless.enable(function(error) {
 	wireless.start();
 });
 
+/* //don't need this because we should always set up a network and connect to an existing one (use former)
 wireless.on('join', function(network) {
 	console.log("[    JOIN] " + network.ssid + " [" + network.address + "] ");
 	setTimeout(onceConnectedToWifi, 20000);
 });
+*/
 
 wireless.on('former', function(address) {
 	console.log("[OLD JOIN] " + address);
@@ -38,87 +40,96 @@ wireless.on('former', function(address) {
 });
 
 function onceConnectedToWifi() {
-	var SerialPort = require('serialport');
-	
-	port = new SerialPort('/dev/ttyUSB0', {
-		parser: SerialPort.parsers.readline('\n')
-	});
-	
-	console.log("Registering Port Events");
-	port.on('error', function(err) {
-		console.log('Error: ', err.message);
-	});
-	
-	port.on('open', function() {
-		setTimeout(registerHubEvents, 5000); //wait 5 seconds for the port to open, connect, and be ready for messages
-	});
-	
-	port.on('data', function(data){
-		console.log(data);
-		if(data.indexOf('temp=') > -1) {
-			var temp = parseInt(data.substring(5));
-			if(temp > 28) {
-				writePortMessage('yellow');
-			}
-		}
-		/*
-		if(data.indexOf('distance=') > -1) {
-			var distance = parseInt(data.substring(9));
-			if(distance < 20) {
-				writePortMessage('teal');
-			}
-		}
-		*/
-	});
+	console.log('wifi connected');
 
-	var signalR = require('signalr-client');
-	
 	console.log("Connecting to SignalR Server...");
+	var signalR = require('signalr-client');
 	client = new signalR.client(
 		signalrServerUrl,
 		['DataHub', 'ModeHub'] //array of hubs
 		//, 10 //reconnection timeout (default is 10 seconds)
 		//, false //doNotStart default is false - if true, must call client.start().
 	);
-
+	
+	console.log("Opening port and registering events");
+	var SerialPort = require('serialport');
+	port = new SerialPort('/dev/ttyUSB0', {
+		parser: SerialPort.parsers.readline('\n')
+	});
+	
+	port.on('error', function(err) {
+		console.log('Error: ', err.message);
+	});
+	
+	port.on('open', function() {
+		console.log('port open, wait 5 seconds and register hub event');
+		setTimeout(registerModeHubEvents, 5000); //wait 5 seconds for the port to open, connect, and be ready for messages
+	});
+	
+	port.on('data', function(data){
+		console.log('Message from arduino: ', data);
+		if(data.indexOf('temp=') > -1) {
+			var temp = parseInt(data.substring(5));
+			if(temp > 28) {
+				writePortMessage('yellow');
+			}
+		}
+		if(data.indexOf('distance=') > -1) {
+			var distance = parseInt(data.substring(9));
+			if(distance > 0 && distance < 20) {
+				writePortMessage('teal');
+			}
+		}
+	});
 }
 
 //events
 
 var mode = '';
-function registerHubEvents() {
+function registerModeHubEvents() {
 	client.on('ModeHub', 'setMode', function(modeName) {
 		console.log('********************' + modeName + '********************');
 		mode = modeName;
 
 		switch(mode) {
 			case 'Circle Game':
+				console.log('circle game mode set');
 				circleGameEvents();
 				break;
 			case 'Meditation':
-				console.log('placeholder: register meditation events here');
+				console.log('meditation mode set');
 				client.handlers.datahub = {
 					updatedata: function(data){
-						console.log(data);
 						console.log('**********INSIDE MEDITATION**********');
+						console.log(data);
+					},
+					getblink: function(blinkStrength) {
+						console.log('Blink Strength: ', blinkStrength);
 					}
 				}
 				break;
 			case 'Remote':
-				console.log('placeholder: register Remote events here');
+				console.log('remote mode set');
 				client.handlers.datahub = {
 					updatedata: function(data) {
-						console.log(data);
 						console.log('**********INSIDE REMOTE**********');
+						console.log(data);
+					},
+					getblink: function(blinkStrength) {
+						console.log('Blink Strength: ', blinkStrength);
 					}
 				}
 				break;
 			case 'StopRobot':
-				writeMessage('stop');
+				console.log('STOPROBOT COMMAND SENT!');
+				writePortMessage('stop');
 				client.handlers.datahub = {
 					updatedata: function(data) {
-						console.log(data);
 						console.log('**********INSIDE STOPROBOT**********');
+						console.log(data);
+					},
+					getblink: function(blinkStrength) {
+						console.log('Blink Strength: ', blinkStrength);
 					}
 				}
 				break;
@@ -127,6 +138,14 @@ function registerHubEvents() {
 		}
 	});
 
+	//send a message to the server every 5 seconds that the connection is still alive
+	logConnectionToServer();
+	
+	//find out what mode is currently running on the server, to initialize the datahub events
+	client.invoke('ModeHub', 'GetMode');
+}
+
+function logConnectionToServer() {
 	setInterval(function() {
 		var ifaces = os.networkInterfaces();
 		Object.keys(ifaces).forEach(function(ifname) {
@@ -151,13 +170,12 @@ function registerHubEvents() {
 			});
 		});
 	}, 5000);
-	
-	client.invoke('ModeHub', 'GetMode');
 }
 
 function circleGameEvents() {
 	client.handlers.datahub = {
 		updatedata: function(data) {
+			console.log('**********INSIDE CIRCLEGAME**********');
 			console.log(data);
 			var message = 'white';
 			if(data.Attention > 60) {

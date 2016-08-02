@@ -20,6 +20,6 @@ outputting to a log is optional - but useful for debugging.
 
 Add a config.js file - it should look like this:
 
-var config = {};
-config.signalrServerUrl = 'http://[SERVER IP ADDRESS HERE]:8080/signalR';
+var config = {};  
+config.signalrServerUrl = 'http://[SERVER IP ADDRESS HERE]:8080/signalR';  
 module.exports = config;
