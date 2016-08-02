@@ -68,6 +68,7 @@ function onceConnectedToWifi() {
 	
 	port.on('data', function(data){
 		console.log('Message from arduino: ', data);
+		/*
 		if(data.indexOf('temp=') > -1) {
 			var temp = parseInt(data.substring(5));
 			if(temp > 28) {
@@ -80,6 +81,7 @@ function onceConnectedToWifi() {
 				writePortMessage('teal');
 			}
 		}
+		*/
 	});
 }
 
