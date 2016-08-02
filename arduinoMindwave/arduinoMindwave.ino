@@ -44,6 +44,8 @@ void loop()
   //checkTemp(10000);
   checkDistance(1000);
   
+  input = "";
+  
   if(distanceTooShort)
   {
     //prevent the robot from hitting a wall!
@@ -308,7 +310,7 @@ void stopRobot()
 void raiseArm() 
 {
   Arm.run(-200);
-  delay(2000);
+  delay(2200);
   Arm.stop();
 }
 
